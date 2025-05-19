@@ -30,3 +30,7 @@ COPY --chown=user Makefile ./
 COPY --chown=user patches ./patches
 COPY --chown=user .git/ ./.git/
 COPY --chown=user .gitignore ./
+
+# Force theme for visual separation of windows if attached in VSCode
+RUN mkdir .vscode
+RUN echo '{"workbench.colorTheme": "Solarized Dark"}' > .vscode/settings.json
