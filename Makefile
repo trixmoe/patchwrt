@@ -20,9 +20,11 @@ specific: generic # Apply patches for specific (kept for test.sh)
 
 target1: generic ## Apply patches for target1
 	@./scripts/apply-patches.sh target1
+	@./scripts/openwrt/prepare-feeds.sh
 
 target2: generic ## Apply patches for target2
 	@./scripts/apply-patches.sh target2
+	@./scripts/openwrt/prepare-feeds.sh
 
 docker: ## Build Docker image
 	@./scripts/docker.sh run
