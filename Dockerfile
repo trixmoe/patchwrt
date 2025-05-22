@@ -1,4 +1,5 @@
-FROM debian:12
+# base only contains the mininmum to do work with a mount (non-macOS, due to case insentitive filesystem)
+FROM debian:12 AS base
 
 # Installing packages: (1) tools (2) OpenWRT deps (3) hidden OpenWRT deps
 RUN apt-get update && \
@@ -20,7 +21,12 @@ ENV BUILD_DIR=/vps/build/
 WORKDIR $BUILD_DIR
 RUN chown -R user /vps/
 USER user
+# Force theme for visual separation of windows if attached in VSCode
+RUN mkdir .vscode
+RUN echo '{"workbench.colorTheme": "Solarized Dark"}' > .vscode/settings.json
 
+# builder acts as a from-scratch environment, appropriate for CI or testing
+FROM base AS builder
 # Minimal copy to allow for maximum caching
 COPY --chown=user modules ./
 COPY --chown=user scripts ./scripts
@@ -30,7 +36,3 @@ COPY --chown=user Makefile ./
 COPY --chown=user patches ./patches
 COPY --chown=user .git/ ./.git/
 COPY --chown=user .gitignore ./
-
-# Force theme for visual separation of windows if attached in VSCode
-RUN mkdir .vscode
-RUN echo '{"workbench.colorTheme": "Solarized Dark"}' > .vscode/settings.json
