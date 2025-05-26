@@ -29,6 +29,9 @@ target2: generic ## Apply patches for target2
 docker: ## Build Docker image
 	@./scripts/docker.sh run
 
+build: ## Build OpenWRT
+	@./scripts/openwrt/build.sh
+
 help: ## Show interactive help
 	@printf "\e[1mVersioned Patch System\e[0m\n"
 	@echo
