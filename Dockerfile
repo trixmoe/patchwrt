@@ -7,8 +7,11 @@ RUN apt-get update && \
                 build-essential asciidoc bash binutils bzip2 flex git g++ gcc time util-linux gawk gzip help2man intltool libelf-dev zlib1g-dev make libncurses-dev libssl-dev patch perl-modules libthread-queue-any-perl python3-dev swig unzip wget gettext xsltproc zlib1g-dev \
                 rsync
 
+# Allow NOPASSWD sudo
+RUN sed -i /etc/sudoers -re 's/^%sudo.*/%sudo ALL=(ALL:ALL) NOPASSWD: ALL/g'
+
 # OpenWRT buildsystem requires non-root user
-RUN useradd -ms /bin/bash user
+RUN useradd -ms /bin/bash -G sudo user
 ENV BUILD_DIR=/vps/build/
 WORKDIR $BUILD_DIR
 RUN chown -R user /vps/
