@@ -10,6 +10,10 @@ RUN apt-get update && \
 # Allow NOPASSWD sudo
 RUN sed -i /etc/sudoers -re 's/^%sudo.*/%sudo ALL=(ALL:ALL) NOPASSWD: ALL/g'
 
+# Fix locale
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
 # OpenWRT buildsystem requires non-root user
 RUN useradd -ms /bin/bash -G sudo user
 ENV BUILD_DIR=/vps/build/
