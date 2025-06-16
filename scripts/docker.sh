@@ -6,6 +6,9 @@ rootdir >/dev/null
 
 build_dir="/vps/build"
 cached_volume="vps-cache-$(id -un)"
+base_name="vps-$(id -un)"
+container_name=$base_name
+image_name=$base_name:dev
 
 print_help()
 {
@@ -20,7 +23,7 @@ run()
     # We assume macOS usage and M3 Pro machines - this can change over time and probably should be made more generic.
     colima status 2>/dev/null || colima start --cpu 12 --memory 24 --disk 150 --vm-type=vz --mount-type=virtiofs
     docker context use colima
-    docker build -t vps:dev .
+    docker build -t "$image_name" .
 
     if ! colima status 2>&1 | grep -q virtiofs; then
         warnmsg "Colima does not use virtiofs, this can cause permission issues.\n"
@@ -34,13 +37,13 @@ run()
         bind_mount="type=bind,src=./,dst=${build_dir}"
     fi
 
-    docker run -dt --name vps --mount $bind_mount --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" vps:dev bash
+    docker run -dt --name "$container_name" --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" "$image_name" bash
 }
 
 rm()
 {
-    docker kill vps
-    docker container rm vps
+    docker kill "$container_name"
+    docker container rm "$container_name"
 }
 
 clean_volume()
