@@ -13,18 +13,22 @@ image_name=$base_name:dev
 print_help()
 {
     printf "Usage: docker.sh COMMAND\n\n"
+    printf "  start  Start colima\n"
     printf "  run    Build and run a development container\n"
     printf "  rm     Kill and delete the existing container\n"
     printf "  clean  Delete openwrt cache volume\n"
 }
 
-run()
+start()
 {
     # We assume macOS usage and M3 Pro machines - this can change over time and probably should be made more generic.
     colima status 2>/dev/null || colima start --cpu 12 --memory 24 --disk 150 --vm-type=vz --mount-type=virtiofs
     docker context use colima
-    docker build -t "$image_name" .
+}
 
+run()
+{
+    docker build -t "$image_name" .
     if ! colima status 2>&1 | grep -q virtiofs; then
         warnmsg "Colima does not use virtiofs, this can cause permission issues.\n"
         warnindent "To fix this issue, you must delete the colima VM by running \'colima delete\' and re-run this command, note that IT WILL DELETE ALL DOCKER DATA.\n\n"
@@ -36,7 +40,6 @@ run()
         # (1) Mount your project directory at the root folder, while (2) keeping (the docker image's) openwrt in a volume
         bind_mount="type=bind,src=./,dst=${build_dir}"
     fi
-
     docker run -dt --name "$container_name" --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" "$image_name" bash
 }
 
@@ -52,7 +55,9 @@ clean_volume()
 }
 
 case $1 in
-    run)    run ;;
+    start)  start ;;
+    run)    start
+            run ;;
     rm)     rm ;;
     clean)  rm
             clean_volume ;;
