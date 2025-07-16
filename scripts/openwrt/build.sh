@@ -5,7 +5,7 @@ BASE_SCRIPTS_DIR=$(dirname "$0")/..
 
 vps_root_dir=$(rootdir)
 
-cd "$vps_root_dir/openwrt" || { errormsg "could not cd into openwrt directory"; exit; }
+cd "$vps_root_dir/openwrt" || { errormsg "could not cd into openwrt directory"; exit 1; }
 
 # Create .config from minimal diffconfig
 make defconfig
