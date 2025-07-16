@@ -14,6 +14,18 @@ VPS_AUTHOR_NAME=vps
 VPS_AUTHOR_EMAIL=vps@invalid
 VPS_AUTHOR="$VPS_AUTHOR_NAME <${VPS_AUTHOR_EMAIL}>"
 
+# Building constants
+build_user=vps
+root_dir=patchwrt
+proj_dir=build
+build_dir="/${root_dir}/${proj_dir}"
+cached_volume="patchwrt-cache-$(id -un)"
+base_name="patchwrt-$(id -un)"
+container_name=$base_name
+image_name="$base_name:dev"
+# shellcheck source=./scripts/vars disable=SC1091 # Overwrite default values, if file exists
+[ -f "$scripts_dir/vars" ] && . "$scripts_dir/vars"
+
 # Static files
 # shellcheck source=./modules
 [ -z "$MODULES_FILE_ROOTDIR" ] && MODULES_FILE_ROOTDIR="./modules"

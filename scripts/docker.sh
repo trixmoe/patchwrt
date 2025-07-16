@@ -4,12 +4,6 @@
 
 rootdir >/dev/null
 
-build_dir="/vps/build"
-cached_volume="vps-cache-$(id -un)"
-base_name="vps-$(id -un)"
-container_name=$base_name
-image_name=$base_name:dev
-
 print_help()
 {
     printf "Usage: docker.sh COMMAND\n\n"
