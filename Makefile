@@ -35,6 +35,9 @@ docker: ## Build Docker image
 build: ## Build OpenWRT
 	@./scripts/openwrt/build.sh
 
+qemu: ## Run built aarch64 files in QEMU
+	@./scripts/openwrt/qemu.sh
+
 help: ## Show interactive help
 	@printf "\e[1mVersioned Patch System\e[0m\n"
 	@echo
