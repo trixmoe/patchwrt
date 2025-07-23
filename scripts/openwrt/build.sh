@@ -41,6 +41,11 @@ cd "$vps_root_dir/openwrt" || { errormsg "could not cd into openwrt directory"; 
 
 if [ -n "$rebuild" ]; then
     board=$(sed -n 's/^CONFIG_TARGET_BOARD="\(.*\)"/\1/p' .config)
+    # If board is missing -> typically means that 'make defconfig' wasn't done
+    if [ -z "$board" ]; then
+        make defconfig
+        board=$(sed -n 's/^CONFIG_TARGET_BOARD="\(.*\)"/\1/p' .config)
+    fi
     target=$(sed -n 's/^CONFIG_TARGET_SUBTARGET="\(.*\)"/\1/p' .config)
     rm "bin/targets/$board/$target"/openwrt-*
 else
