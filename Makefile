@@ -32,7 +32,7 @@ docker: ## Build Docker image
 build: ## Build OpenWRT
 	@./scripts/openwrt/build.sh
 
-qemu: ## Run built aarch64 files in QEMU
+qemu: ## Run built aarch64 files in QEMU (Quit: CTRL+A, then X)
 	@./scripts/openwrt/qemu.sh
 
 help: ## Show interactive help
