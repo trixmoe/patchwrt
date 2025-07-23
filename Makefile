@@ -35,6 +35,9 @@ docker: ## Build Docker image
 build: ## Build OpenWRT
 	@./scripts/openwrt/build.sh
 
+rebuild: ## Rebuild OpenWrt (DIRTY but quicker)
+	@./scripts/openwrt/build.sh --rebuild
+
 qemu: ## Run built aarch64 files in QEMU (Quit: CTRL+A, then X)
 	@./scripts/openwrt/qemu.sh
 
