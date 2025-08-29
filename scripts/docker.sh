@@ -1,6 +1,7 @@
 #!/bin/sh
 # shellcheck source=./scripts/common.sh
 . "$(dirname "$0")/common.sh"
+set -e
 
 rootdir >/dev/null
 
@@ -13,16 +14,33 @@ print_help()
     printf "  clean  Delete openwrt cache volume\n"
 }
 
-start()
+start_docker()
 {
-    # We assume macOS usage and M3 Pro machines - this can change over time and probably should be made more generic.
-    colima status 2>/dev/null || colima start --cpu 12 --memory 24 --disk 150 --vm-type=vz --mount-type=virtiofs
-    docker context use colima
+    if ! docker ps >/dev/null; then
+        if colima >/dev/null; then
+            nproc=$(getconf _NPROCESSORS_ONLN)
+            case "$(uname -s)" in
+                Linux*)     mem=$(awk '/MemTotal/ {print int($2/(1024^2))}' /proc/meminfo);;
+                Darwin*)    mem=$(awk "BEGIN {print int($(sysctl -n hw.memsize)/(1024)^3)}");;
+                *)          { errormsg "could not detect platform to start colima\n"; exit 1; }
+            esac
+
+            colima status 2>/dev/null || colima start -c "$nproc" -m "$mem" --vm-type=vz --mount-type=virtiofs || { errormsg "colima could not be started.\n"; return 1; }
+            docker context use colima || { errormsg "switching to colima Docker context failed\n"; return 1; }
+        else
+            errormsg "Docker Engine is not running. Please start the Docker Engine manually."
+            return 1
+        fi
+    fi
+}
+
+build()
+{
+    docker build -t "$image_name" .
 }
 
 run()
 {
-    docker build -t "$image_name" .
     if ! colima status 2>&1 | grep -q virtiofs; then
         warnmsg "Colima does not use virtiofs, this can cause permission issues.\n"
         warnindent "To fix this issue, you must delete the colima VM by running \'colima delete\' and re-run this command, note that IT WILL DELETE ALL DOCKER DATA.\n\n"
@@ -49,8 +67,11 @@ clean_volume()
 }
 
 case $1 in
-    start)  start ;;
-    run)    start
+    start)  start_docker ;;
+    build)  start_docker
+            build ;;
+    run)    start_docker
+            build
             run ;;
     rm)     rm ;;
     clean)  rm
