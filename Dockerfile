@@ -15,12 +15,17 @@ RUN sed -i /etc/sudoers -re 's/^%sudo.*/%sudo ALL=(ALL:ALL) NOPASSWD: ALL/g'
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
+ARG BUILD_USER
+ARG BUILD_ROOTDIR
+ARG BUILD_PROJDIR
+ENV BUILD_DIR="/${BUILD_ROOTDIR}/${BUILD_PROJDIR}"
+ENV USR=$BUILD_USER
+
 # OpenWRT buildsystem requires non-root user
-RUN useradd -ms /bin/bash -G sudo user
-ENV BUILD_DIR=/vps/build/
+RUN useradd -ms /bin/bash -G sudo $USR
 WORKDIR $BUILD_DIR
-RUN chown -R user /vps/
-USER user
+RUN chown -R $USR /${BUILD_ROOTDIR}/
+USER $USR
 # Force theme for visual separation of windows if attached in VSCode
 RUN mkdir .vscode
 RUN echo '{"workbench.colorTheme": "Solarized Dark"}' > .vscode/settings.json
@@ -28,11 +33,11 @@ RUN echo '{"workbench.colorTheme": "Solarized Dark"}' > .vscode/settings.json
 # builder acts as a from-scratch environment, appropriate for CI or testing
 FROM base AS builder
 # Minimal copy to allow for maximum caching
-COPY --chown=user modules ./
-COPY --chown=user scripts ./scripts
+COPY --chown=$USR modules ./
+COPY --chown=$USR scripts ./scripts
 RUN ./scripts/update.sh
 # Copy everything else that's important and might change more often
-COPY --chown=user Makefile ./
-COPY --chown=user patches ./patches
-COPY --chown=user .git/ ./.git/
-COPY --chown=user .gitignore ./
+COPY --chown=$USR Makefile ./
+COPY --chown=$USR patches ./patches
+COPY --chown=$USR .git/ ./.git/
+COPY --chown=$USR .gitignore ./
