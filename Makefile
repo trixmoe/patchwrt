@@ -15,11 +15,14 @@ save-one: ## Only saves a single patchset
 generic: ## Apply generic patches
 	@./scripts/apply-patches.sh generic
 
-specific: generic ## Apply patches for specific
+specific: generic # Apply patches for specific (kept for test.sh)
 	@./scripts/apply-patches.sh specific
 
-specific2: generic ## Apply patches for specific2
-	@./scripts/apply-patches.sh specific2
+target1: generic ## Apply patches for target1
+	@./scripts/apply-patches.sh target1
+
+target2: generic ## Apply patches for target2
+	@./scripts/apply-patches.sh target2
 
 docker: ## Build Docker image
 	@./scripts/docker.sh run
