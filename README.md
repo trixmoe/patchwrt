@@ -1,5 +1,7 @@
-# Versioned Patch System
+# PatchWrt
 
-Framework to help maintain (un-upstreamable) patches on top of a repository, in a versioned repository.
+Framework to maintain patched OpenWrt trees for multiple (custom) targets, alongside building tools (incl. for macOS).
+
+## Credits
 
 Inspired by [gluon](https://github.com/freifunk-gluon/gluon)'s approach, but more minimal and *should* work with `/bin/sh`.
