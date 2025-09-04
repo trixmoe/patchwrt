@@ -54,7 +54,9 @@ run()
         # (1) Mount your project directory at the root folder, while (2) keeping (the docker image's) openwrt in a volume
         bind_mount="type=bind,src=./,dst=${build_dir}"
     fi
-    docker run -dt --name "$container_name" --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" "$image_name" bash
+    docker run --name "$container_name" \
+        --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" \
+        -dt "$image_name" bash
 }
 
 rm()
