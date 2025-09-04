@@ -36,7 +36,9 @@ start_docker()
 
 build()
 {
-    docker build -t "$image_name" .
+    docker build \
+        --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir" \
+        -t "$image_name" .
 }
 
 run()
