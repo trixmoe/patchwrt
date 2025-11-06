@@ -126,7 +126,7 @@ for module in $MODULES; do
 
         patchset_dir=$vps_root_dir/patches/$module_dir/$current_tag
         mkdir -p "$patchset_dir"
-        rm "$patchset_dir"/* || true # delete old patches
+        rm "$patchset_dir"/*.patch || true # delete old patches
         git format-patch --zero-commit -k --patience -o "$patchset_dir" "$ancestor_tag_id..$current_tag_id"
 
         saved_patchsets_count=$((saved_patchsets_count+1))

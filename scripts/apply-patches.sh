@@ -54,7 +54,7 @@ for module in $MODULES; do
     # TODO: add Git notes to each commit based on patchset (e.g. vps-patchset)
 
     infomsg "Applying patch set \"%s\"\n" "$patch_set"
-    GIT_COMMITTER_NAME="$VPS_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$VPS_AUTHOR_EMAIL" git am --committer-date-is-author-date "$patches_dir"/*
+    GIT_COMMITTER_NAME="$VPS_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$VPS_AUTHOR_EMAIL" git am --committer-date-is-author-date "$patches_dir"/*.patch
 
     if [ -n "$will_tag" ]; then
         git tag -f "$patch_set"
