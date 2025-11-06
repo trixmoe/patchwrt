@@ -25,8 +25,11 @@ start_docker()
                 *)          { errormsg "could not detect platform to start colima\n"; exit 1; }
             esac
 
-            colima status 2>/dev/null || colima start -c "$nproc" -m "$mem" --vm-type=vz --mount-type=virtiofs || { errormsg "colima could not be started.\n"; return 1; }
+            colima status 2>/dev/null || colima start -c "$nproc" -m "$mem" --ssh-agent --vm-type=vz --mount-type=virtiofs || { errormsg "colima could not be started.\n"; return 1; }
             docker context use colima || { errormsg "switching to colima Docker context failed\n"; return 1; }
+            # shellcheck disable=SC2016 # this is intended - variable should be evaluated in colima VM
+            sock=$(colima ssh eval 'echo $SSH_AUTH_SOCK')
+            ssh_agent_args="-v $sock:$sock -e SSH_AUTH_SOCK=$sock"
         else
             errormsg "Docker Engine is not running. Please start the Docker Engine manually."
             return 1
@@ -54,8 +57,9 @@ run()
         # (1) Mount your project directory at the root folder, while (2) keeping (the docker image's) openwrt in a volume
         bind_mount="type=bind,src=./,dst=${build_dir}"
     fi
+    # shellcheck disable=SC2086 # ssh_agent_args represents arguments
     docker run --name "$container_name" \
-        --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" \
+        --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" $ssh_agent_args \
         -dt "$image_name" bash
 }
 
