@@ -30,7 +30,7 @@ target2: generic ## Apply patches for target2
 	@./scripts/openwrt/prepare-feeds.sh
 
 docker: ## Build Docker image
-	@./scripts/docker.sh run
+	@./scripts/docker.sh all
 
 build: ## Build OpenWRT
 	@./scripts/openwrt/build.sh

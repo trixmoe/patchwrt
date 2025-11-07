@@ -9,7 +9,9 @@ print_help()
 {
     printf "Usage: docker.sh COMMAND\n\n"
     printf "  start  Start colima\n"
-    printf "  run    Build and run a development container\n"
+    printf "  build  Build the image\n"
+    printf "  run    Run a development container\n"
+    printf "  all    Start, Build and Run a container\n"
     printf "  rm     Kill and delete the existing container\n"
     printf "  clean  Delete openwrt cache volume\n"
 }
@@ -76,9 +78,9 @@ clean_volume()
 
 case $1 in
     start)  start_docker ;;
-    build)  start_docker
-            build ;;
-    run)    start_docker
+    build)  build ;;
+    run)    run ;;
+    all)    start_docker
             build
             run ;;
     rm)     rm ;;
