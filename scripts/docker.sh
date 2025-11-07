@@ -76,15 +76,25 @@ clean_volume()
     docker volume rm "${cached_volume}"
 }
 
-case $1 in
-    start)  start_docker ;;
-    build)  build ;;
-    run)    run ;;
-    all)    start_docker
-            build
-            run ;;
-    rm)     rm ;;
-    clean)  rm
-            clean_volume ;;
-    *)      print_help;;
-esac
+# No arguments -> help
+if [ $# -eq 0 ]; then
+    print_help
+fi
+
+# Parse multiple arguments (e.g. 'start build') w/o triggering help
+while [ $# -gt 0 ]; do
+    case $1 in
+        start)  start_docker ;;
+        build)  build ;;
+        run)    run ;;
+        all)    start_docker
+                build
+                run ;;
+        rm)     rm ;;
+        clean)  clean_volume ;;
+        *)      print_help
+                break;;
+    esac
+
+    shift
+done
