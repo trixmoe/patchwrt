@@ -1,0 +1,4 @@
+project_name=patchwrt-milkv-duos
+build_user=trix
+root_dir=milkv
+proj_dir=build
