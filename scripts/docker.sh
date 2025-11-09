@@ -41,6 +41,7 @@ start_docker()
 
 build()
 {
+    [ ! -d patches ] && mkdir -v patches # Ensure patches directory exist (required)
     docker build \
         --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir" \
         -t "$image_name" .
