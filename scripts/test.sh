@@ -9,11 +9,15 @@ print_help()
     warnf  "The tests will not run if modules are already cloned.\n"
 }
 
+quiet=false
 while :; do
     case $1 in
         -\?|--help)
             print_help
             exit
+            ;;
+        -q)
+            quiet=true
             ;;
         --)
             shift
@@ -76,7 +80,7 @@ runtest() {
         FAILED_TESTS=$((FAILED_TESTS+1))
     else
         passmsg "%s passed.\n" "$1"
-        echo "$output" | sed 's/\r//g; s/^/   /'
+        [ "$quiet" = "false" ] && echo "$output" | sed 's/\r//g; s/^/   /'
         PASSED_TESTS=$((PASSED_TESTS+1))
     fi
 }
