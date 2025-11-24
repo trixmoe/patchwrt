@@ -68,7 +68,7 @@ run()
 
 rm()
 {
-    docker kill "$container_name"
+    [ "$(docker ps -q -f "name=$container_name")" ] && docker kill "$container_name"
     docker container rm "$container_name"
 }
 
