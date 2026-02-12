@@ -43,5 +43,6 @@ COPY --chown=$USR .git/ ./.git/
 COPY --chown=$USR .gitignore ./
 
 FROM builder AS toolchain
+ARG PATCHSET
 RUN make $PATCHSET
 RUN make toolchain
