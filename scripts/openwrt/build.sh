@@ -8,16 +8,20 @@ print_help()
     printf "Usage: build.sh\n"
     printf "This script builds OpenWrt incl. pre-required commands\n\n"
 
+    printf "  --toolchain  Only build tools and toolchain\n"
     printf "  --rebuild    Dirty but quicker build\n"
     printf "  --help       Show this help menu\n"
 }
 
-unset rebuild
+unset toolchain_only rebuild
 while :; do
     case $1 in
         -\?|-help|--help)
             print_help
             exit 0
+            ;;
+        --toolchain)
+            toolchain_only=1
             ;;
         --rebuild)
             rebuild=1
@@ -39,6 +43,15 @@ vps_root_dir=$(rootdir)
 
 cd "$vps_root_dir/openwrt" || { errormsg "could not cd into openwrt directory"; exit 1; }
 
+ncpus=$(nproc)
+
+if [ -n "$toolchain_only" ]; then
+    make defconfig
+    # 'make prepare' (undocumented?) builds tools + toolchain + kernel
+    make prepare "-j$ncpus"
+    exit 0
+fi
+
 if [ -n "$rebuild" ]; then
     board=$(sed -n 's/^CONFIG_TARGET_BOARD="\(.*\)"/\1/p' .config)
     # If board is missing -> typically means that 'make defconfig' wasn't done
@@ -55,5 +68,4 @@ else
     make clean
 fi
 
-ncpus=$(nproc)
 make "-j$ncpus"
