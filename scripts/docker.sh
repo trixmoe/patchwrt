@@ -53,9 +53,9 @@ tools()
 {
     patchset=$1
     docker build \
-        --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir"
+        --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir" \
         --target "toolchain" --build-arg PATCHSET="$patchset" \
-        -t "$image_name-toolchain-${patchset//_/-}" . || { errormsg "could not build toolchain for \"$patchset\".\n"; exit 1; }
+        -t "$image_name-toolchain-$(printf '%s' "$patchset" | tr '_' '-')" . || { errormsg "could not build toolchain for \"$patchset\".\n"; exit 1; }
 }
 
 run()
@@ -98,7 +98,7 @@ while [ $# -gt 0 ]; do
     case $1 in
         start)  start_docker ;;
         build)  build ;;
-        tools)  tools $2
+        tools)  tools "$2"
                 shift;;
         run)    run ;;
         all)    start_docker
