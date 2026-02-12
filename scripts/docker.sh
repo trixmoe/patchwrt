@@ -8,12 +8,13 @@ rootdir >/dev/null
 print_help()
 {
     printf "Usage: docker.sh COMMAND\n\n"
-    printf "  start  Start colima\n"
-    printf "  build  Build the image\n"
-    printf "  run    Run a development container\n"
-    printf "  all    Start, Build and Run a container\n"
-    printf "  rm     Kill and delete the existing container\n"
-    printf "  clean  Delete openwrt cache volume\n"
+    printf "  start            Start colima\n"
+    printf "  build            Build the image\n"
+    printf "  tools [patchset] Build the toolchain for [patchset]\n"
+    printf "  run              Run a development container\n"
+    printf "  all              Start, Build and Run a container\n"
+    printf "  rm               Kill and delete the existing container\n"
+    printf "  clean            Delete openwrt cache volume\n"
 }
 
 start_docker()
@@ -44,7 +45,17 @@ build()
     [ ! -d patches ] && mkdir -v patches # Ensure patches directory exist (required)
     docker build \
         --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir" \
+        --target "builder" \
         -t "$image_name" .
+}
+
+tools()
+{
+    patchset=$1
+    docker build \
+        --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir"
+        --target "toolchain" --build-arg PATCHSET="$patchset" \
+        -t "$image_name-toolchain-${patchset//_/-}" . || { errormsg "could not build toolchain for \"$patchset\".\n"; exit 1; }
 }
 
 run()
@@ -87,6 +98,8 @@ while [ $# -gt 0 ]; do
     case $1 in
         start)  start_docker ;;
         build)  build ;;
+        tools)  tools $2
+                shift;;
         run)    run ;;
         all)    start_docker
                 build
