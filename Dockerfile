@@ -41,3 +41,7 @@ COPY --chown=$USR Makefile ./
 COPY --chown=$USR patches ./patches
 COPY --chown=$USR .git/ ./.git/
 COPY --chown=$USR .gitignore ./
+
+FROM builder AS toolchain
+RUN make $PATCHSET
+RUN make toolchain
