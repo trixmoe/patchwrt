@@ -71,9 +71,14 @@ run()
         # (1) Mount your project directory at the root folder, while (2) keeping (the docker image's) openwrt in a volume
         bind_mount="type=bind,src=./,dst=${build_dir}"
     fi
+
+    mounts="--mount $bind_mount"
+    if [ -z "$CI" ]; then
+        mounts="$mounts --mount type=volume,src=${cached_volume},dst=${build_dir}/openwrt"
+    fi
     # shellcheck disable=SC2086 # ssh_agent_args represents arguments
     docker run --name "$container_name" \
-        --mount "$bind_mount" --mount "type=volume,src=${cached_volume},dst=${build_dir}/openwrt" $ssh_agent_args \
+        $mounts $ssh_agent_args \
         -dt "$image_name" bash
 }
 
