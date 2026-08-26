@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt install --no-install-recommends -y \
                 vim tmux ccache sudo git git-doc git-extras git-filter-repo tig bash bash-completion fzf ripgrep bat openssh-client \
                 build-essential asciidoc bash binutils bzip2 flex git g++ gcc time util-linux gawk gzip help2man intltool libelf-dev zlib1g-dev make libncurses-dev libssl-dev patch perl-modules libthread-queue-any-perl python3-dev swig unzip wget gettext xsltproc zlib1g-dev \
-                rsync
+                rsync python3-pip python3-setuptools
 
 # Allow NOPASSWD sudo
 RUN sed -i /etc/sudoers -re 's/^%sudo.*/%sudo ALL=(ALL:ALL) NOPASSWD: ALL/g'
