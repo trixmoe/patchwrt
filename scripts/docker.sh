@@ -74,6 +74,11 @@ run()
 
     mounts="--mount $bind_mount"
     if [ -z "$CI" ]; then
+        # The CI runner does not use a cache volume as it would only be kept for one run, so practically it always is an
+        # empty mount. The problem with this is that docker copies over all the overlayed files from the image to the
+        # volume if the volume is empty, (https://docs.docker.com/engine/storage/volumes/#mounting-a-volume-over-existing-data)
+        # which takes quite a while on the CI runners. Instead, the container just writes to its writable layer, which
+        # requires no copying and has all the changes discarded at the end of a job
         mounts="$mounts --mount type=volume,src=${cached_volume},dst=${build_dir}/openwrt"
     fi
     # shellcheck disable=SC2086 # ssh_agent_args represents arguments
