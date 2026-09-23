@@ -2,6 +2,8 @@
 # shellcheck source=./scripts/common.sh
 . "$(dirname "$0")/common.sh"
 set -e
+# shellcheck disable=SC3040 # Set pipefail if it works in a subshell, disregard if unsupported
+(set -o pipefail 2> /dev/null) && set -o pipefail
 
 rootdir >/dev/null
 
@@ -30,9 +32,6 @@ start_docker()
 
             colima status 2>/dev/null || colima start -c "$nproc" -m "$mem" --ssh-agent --vm-type=vz --mount-type=virtiofs || { errormsg "colima could not be started.\n"; return 1; }
             docker context use colima || { errormsg "switching to colima Docker context failed\n"; return 1; }
-            # shellcheck disable=SC2016 # this is intended - variable should be evaluated in colima VM
-            sock=$(colima ssh eval 'echo $SSH_AUTH_SOCK')
-            ssh_agent_args="-v $sock:$sock -e SSH_AUTH_SOCK=$sock"
         else
             errormsg "Docker Engine is not running. Please start the Docker Engine manually."
             return 1
@@ -60,7 +59,7 @@ tools()
 
 run()
 {
-    if ! colima status 2>&1 | grep -q virtiofs; then
+    if command -v colima > /dev/null 2>&1 && ! colima status 2>&1 | grep -q virtiofs; then
         warnmsg "Colima does not use virtiofs, this can cause permission issues.\n"
         warnindent "To fix this issue, you must delete the colima VM by running \'colima delete\' and re-run this command, note that IT WILL DELETE ALL DOCKER DATA.\n\n"
         warnmsg "As to avoid any potential issues, only the patches will be mounted, not the whole project directory\n."
@@ -72,15 +71,26 @@ run()
         bind_mount="type=bind,src=./,dst=${build_dir}"
     fi
 
-    mounts="--mount $bind_mount"
-    if [ -z "$CI" ]; then
-        # The CI runner does not use a cache volume as it would only be kept for one run, so practically it always is an
-        # empty mount. The problem with this is that docker copies over all the overlayed files from the image to the
-        # volume if the volume is empty, (https://docs.docker.com/engine/storage/volumes/#mounting-a-volume-over-existing-data)
-        # which takes quite a while on the CI runners. Instead, the container just writes to its writable layer, which
-        # requires no copying and has all the changes discarded at the end of a job
-        mounts="$mounts --mount type=volume,src=${cached_volume},dst=${build_dir}/openwrt"
+    if [ -n "$CI" ]; then
+        # Unlike local dev, CI doesn't use a cached volume, instead the cache lives in the image instead, which also
+        # avoids docker's slow copy-on-empty behavior with empty volumes. We still need to overwrite non-cached files 
+        # (e.g. Makefile) with the current ones instead of the cached versions.
+        EXCLUDES=$(grep "_DIRECTORY=" modules | cut -d= -f2)
+        for e in ./*; do
+            n=$(basename "$e")
+            echo "$EXCLUDES" | grep -qx "$n" && continue
+            mounts="$mounts --mount type=bind,src=./${n},dst=${build_dir}/${n}"
+        done
+    else
+        mounts="--mount $bind_mount --mount type=volume,src=${cached_volume},dst=${build_dir}/openwrt"
     fi
+
+    # shellcheck disable=SC2016 # this is intended - variable should be evaluated in colima VM
+    if command -v colima > /dev/null 2>&1 && sock=$(colima ssh eval 'echo $SSH_AUTH_SOCK' 2>/dev/null) && [ -n "$sock" ]; then
+        # Forward colima's ssh-agent socket into the container so ssh works there to
+        ssh_agent_args="-v $sock:$sock -e SSH_AUTH_SOCK=$sock"
+    fi
+
     # shellcheck disable=SC2086 # ssh_agent_args represents arguments
     docker run --name "$container_name" \
         $mounts $ssh_agent_args \
