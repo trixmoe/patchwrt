@@ -42,7 +42,7 @@ vps_root_dir=$(rootdir)
 cleanup()
 {
     if [ -n "$MODULES_FILE_ROOTDIR" ]; then
-        for module in $MODULES; do
+        for module in $ALL_MODULES; do
             directory="" # SC2154/SC2034
             eval directory="\$${module}_DIRECTORY"
             [ -d "$directory" ] && rm -fr "$directory"
@@ -89,8 +89,9 @@ runtest() {
 export MODULES_FILE_ROOTDIR="$vps_root_dir/testmodules"
 cat << EOF > "$vps_root_dir/testmodules"
 MODULES="GITHUBIGNORE CHEATSHEET"
-ALL_MODULES="\$MODULES"
+ALL_MODULES="\$MODULES UNLISTED INACTIVE PATCHA PATCHB"
 
+# "Activated" modules
 GITHUBIGNORE_URL="https://github.com/github/gitignore.git"
 GITHUBIGNORE_BRANCH="main"
 GITHUBIGNORE_COMMIT="57208bef833f2f8286cd6dae5a2eeb3d314e3b31"
@@ -101,6 +102,30 @@ CHEATSHEET_BRANCH="master"
 CHEATSHEET_COMMIT="80dbfe09af7da6a1c5bb4b5bb7a89025675312a4"
 CHEATSHEET_DIRECTORY="github-sheet"
 
+# "Non-activated" modules
+# Test non-listed module patching/cloning (not in MODULES, nor ALL_MODULES)
+UNLISTED_URL="https://github.com/github/gitignore.git"
+UNLISTED_BRANCH="main"
+UNLISTED_COMMIT="57208bef833f2f8286cd6dae5a2eeb3d314e3b31"
+UNLISTED_DIRECTORY="github-unlisted"
+
+# Used to test that 'dirclean' also removes listed but not activated modules
+INACTIVE_URL=""
+INACTIVE_BRANCH=""
+INACTIVE_COMMIT=""
+INACTIVE_DIRECTORY="inactive-mod"
+
+# Used to test patch application across multiple modules
+PATCHA_URL=""
+PATCHA_BRANCH=""
+PATCHA_COMMIT=""
+PATCHA_DIRECTORY="patch-a"
+
+PATCHB_URL=""
+PATCHB_BRANCH=""
+PATCHB_COMMIT=""
+PATCHB_DIRECTORY="patch-b"
+
 EOF
 infomsg "Created modules file for testing...\n"
 
@@ -109,7 +134,7 @@ infomsg "Created modules file for testing...\n"
 # ------------------------------------------------------------------------------
 # Check before testing
 
-for module in $MODULES; do
+for module in $ALL_MODULES; do
     directory="" # SC2154/SC2034
     eval directory="\$${module}_DIRECTORY"
 
@@ -121,6 +146,50 @@ done
 
 # ------------------------------------------------------------------------------
 # Testing
+
+# Update a single module through make (relies on 'make update MODULE=...')
+make_update_module() (
+    make update MODULE="$1"
+)
+
+# Only the requested module is updated
+update_single_module() (
+    set -e
+
+    make_update_module GITHUBIGNORE
+    [ -d github-ignore ] || { errormsg "gh-ignore: The requested module was not cloned.\n"; exit 1; }
+    [ ! -d github-sheet ] || { errormsg "gh-ignore: A module that was not requested was cloned.\n"; exit 1; }
+    make dirclean
+
+    make_update_module CHEATSHEET
+    [ -d github-sheet ] || { errormsg "gh-sheet: The requested module was not cloned.\n"; exit 1; }
+    [ ! -d github-ignore ] || { errormsg "gh-sheet: A module that was not requested was cloned.\n"; exit 1; }
+
+    make dirclean
+    [ ! -d github-sheet ] || { errormsg "single-module: dirclean failed.\n" exit 1; }
+    [ ! -d github-ignore ] || { errormsg "single-module: dirclean failed.\n"; exit 1; }
+)
+
+runtest update_single_module
+
+# A module directory with a mismatching remote must be rejected
+remote_collision_guard() (
+    set -e
+
+    mkdir github-unlisted
+    cd github-unlisted
+    git init -q
+    git remote add origin https://example.invalid/wrong.git
+    cd ../
+
+    if make_update_module UNLISTED; then
+        errormsg "A module directory with a mismatching remote was accepted.\n"
+        exit 1
+    fi
+    make dirclean
+)
+
+runtest remote_collision_guard
 
 # Update modules
 make_update() (
@@ -355,6 +424,83 @@ infomsg "${COLOR_PURPLE}Info: The working dir is reset for a proper specific com
 runtest delete_branches
 runtest reset_workingdir
 runtest apply_specific_commits
+
+# Patches must be applied to modules that are not listed in the modules file
+apply_unlisted_module() (
+    set -e
+
+    make dirclean
+    make update MODULE=UNLISTED
+    #git init -q github-unlisted
+    mkdir -p patches/github-unlisted/generic
+    cd github-unlisted
+    git config user.name "unlisted"
+    git config user.email "test@example.org"
+    echo "unlisted" >> file
+    git add file
+    git commit -m "unlisted change"
+    git tag generic
+    cd ../
+    make save
+    # Undo the change so the patch has to be applied again
+    cd github-unlisted
+    git reset -q --hard HEAD~1
+    git tag -d generic >/dev/null
+    cd ../
+
+    make generic
+
+    grep "unlisted" github-unlisted/file >/dev/null || { errormsg "Patches were not applied to an unlisted module.\n"; exit 1; }
+)
+
+runtest apply_unlisted_module
+
+# An already-applied module must not abort the patching of the remaining modules
+already_applied_continues() (
+    set -e
+
+    for module in patch-a patch-b; do
+        git init -q "$module"
+        mkdir -p "patches/$module/generic"
+        cd "$module"
+        git config user.name "test"
+        git config user.email "test@example.org"
+        echo "upstream" > file
+        git add file
+        git commit -m "upstream"
+        echo "$module" >> file
+        git add file
+        git commit -m "$module change"
+        git tag generic
+        git format-patch --zero-commit -k --patience -o "../patches/$module/generic" HEAD~1..HEAD
+        cd ../
+    done
+
+    make generic
+
+    # Un-apply the last module, so the first one is already applied on the next run
+    cd patch-b
+    git reset -q --hard HEAD~1
+    git tag -d generic >/dev/null
+    cd ../
+
+    make generic
+
+    grep "patch-b" patch-b/file >/dev/null || { errormsg "An already-applied module aborted the patching of later modules.\n"; exit 1; }
+)
+
+runtest already_applied_continues
+
+# 'dirclean' must also remove modules that are not in the activated list
+cleandir_inactive_module() (
+    set -e
+
+    mkdir inactive-mod
+    make dirclean
+    [ ! -d inactive-mod ] || { errormsg "'make dirclean' did not remove an inactive module.\n"; exit 1; }
+)
+
+runtest cleandir_inactive_module
 
 # ------------------------------------------------------------------------------
 # Summary
