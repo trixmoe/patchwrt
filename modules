@@ -1,4 +1,5 @@
 MODULES="OPENWRT"
+ALL_MODULES="OPENWRT"
 
 OPENWRT_URL=https://github.com/openwrt/openwrt.git
 OPENWRT_BRANCH=openwrt-22.03

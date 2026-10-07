@@ -1,11 +1,11 @@
 #!/bin/sh
-# shellcheck source=./scripts/common.sh
-BASE_SCRIPTS_DIR=$(dirname "$0")/..
-. "$BASE_SCRIPTS_DIR/common.sh"
+# shellcheck source=./scripts/openwrt/common.sh
+OPENWRT_SCRIPTS_DIR=$(dirname "$0")/
+. "$OPENWRT_SCRIPTS_DIR/common.sh"
 
 vps_root_dir=$(rootdir)
 
-cd "$vps_root_dir/openwrt" || { errormsg "could not cd into openwrt directory"; exit 1; }
+cd "$vps_root_dir/$_OPENWRT_DIR" || { errormsg "could not cd into openwrt directory"; exit 1; }
 
 # add RIPE Atlas feed to local files
 ./scripts/feeds update -a

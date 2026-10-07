@@ -1,23 +1,25 @@
 #!/bin/sh
-# shellcheck source=./scripts/common.sh
-BASE_SCRIPTS_DIR=$(dirname "$0")/..
-. "$BASE_SCRIPTS_DIR/common.sh"
+# shellcheck source=./scripts/openwrt/common.sh
+OPENWRT_SCRIPTS_DIR=$(dirname "$0")/
+. "$OPENWRT_SCRIPTS_DIR/common.sh"
 set -eu
 
 vps_root_dir=$(rootdir)
+
+warnmsg "Currently only works for 22.03."
 
 # Create 'qemu' directory
 if [ ! -d "$vps_root_dir/qemu" ]; then
     mkdir -v "$vps_root_dir/qemu"
 fi
 
-cd "$vps_root_dir/qemu" || { errormsg "could not cd into openwrt directory"; exit 1; }
+cd "$vps_root_dir/qemu" || { errormsg "could not cd into qemu directory"; exit 1; }
 
 target_prefix="openwrt-armvirt-64-"
 kernel="${target_prefix}Image"
 rootfs="${target_prefix}rootfs-ext4.img"
 rootfs_gzip="$rootfs.gz"
-container_path="$container_name:$build_dir/openwrt/bin/targets/armvirt/64"
+container_path="$container_name:$build_dir/$_OPENWRT_DIR/bin/targets/armvirt/64"
 # Copy build files if missing
 if [ ! -f "$kernel" ]; then
     docker container cp "$container_path/$kernel" "./"
