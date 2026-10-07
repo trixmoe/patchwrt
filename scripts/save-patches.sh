@@ -80,7 +80,7 @@ is_commit_child_of_ancestor()
     git merge-base --is-ancestor "$ancestor" "$child"
 }
 
-for module in $MODULES; do
+for module in $ALL_MODULES; do
     infomsg "Saving patches for module: %s\n" "$module"
 
     # cd into module directory
