@@ -85,11 +85,11 @@ update_module() {
         cd "$vps_root_dir" || { errormsg "cannot return to versioned patch system root directory\n"; exit 1; }
     else
         infomsg "Cloning module...\n"
-        git clone "$url" "$directory" || { errmsg "failed to clone module:%s\n" "$url" ; exit 1; }
+        git clone "$url" "$directory" || { errormsg "failed to clone module:%s\n" "$url" ; exit 1; }
     fi
 
     # Check out branch/commit
-    cd "$directory" || { errmsg "cannot enter module directory\n"; exit 1; }
+    cd "$directory" || { errormsg "cannot enter module directory\n"; exit 1; }
     git checkout -q "$branch"
     head_commit=$(git rev-parse HEAD)
     if [ "$head_commit" != "$commit" ]; then

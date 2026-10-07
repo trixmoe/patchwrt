@@ -1,10 +1,10 @@
 default: help
 
-update: ## Update modules
-	@./scripts/update.sh
+update: ## Update modules (all, or MODULE="A B")
+	@./scripts/update.sh $(MODULE)
 
-nupdate: ## Update modules (no backup)
-	@./scripts/update.sh -n
+nupdate: ## Update modules, no backup (all, or MODULE="A B")
+	@./scripts/update.sh -n $(MODULE)
 
 dirclean: ## Delete module directories
 	@./scripts/cleandir.sh
