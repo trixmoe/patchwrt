@@ -76,3 +76,31 @@ rootdir() {
     cd "$vps_root_dir" || { errormsg "cannot enter versioned patch system root directory\n"; exit 1; }
     printf "%s" "$vps_root_dir"
 }
+
+_modules_dir() {
+    (
+    rootdir >/dev/null
+    # shellcheck disable=SC1090 # may change at runtime
+    . "$MODULES_FILE_ROOTDIR"
+
+    if [ "${1:-}" = "all" ]; then
+        __modules=$ALL_MODULES
+    else
+        __modules=$MODULES
+    fi
+
+    for __module in $__modules; do
+        __module_dir="" # SC2154/SC2034
+        eval __module_dir="\$${__module}_DIRECTORY"
+        [ -n "$__module_dir" ] && printf "%s\n" "$__module_dir"
+    done
+    ) | sort -u
+}
+
+modules_dir() {
+    _modules_dir
+}
+
+all_modules_dir() {
+    _modules_dir "all"
+}
