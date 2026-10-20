@@ -7,6 +7,8 @@ vps_root_dir=$(rootdir)
 
 cd "$vps_root_dir/$_OPENWRT_DIR" || { errormsg "could not cd into openwrt directory"; exit 1; }
 
+set -e
+
 # add RIPE Atlas feed to local files
 ./scripts/feeds update -a
 ./scripts/feeds install -a
