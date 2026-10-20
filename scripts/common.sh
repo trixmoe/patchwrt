@@ -22,12 +22,12 @@ proj_dir=build
 # shellcheck source=./scripts/vars disable=SC1091 # Overwrite default values, if file exists
 [ -f "$scripts_dir/vars" ] && . "$scripts_dir/vars"
 
-# Building constants (that are dynamically created)
-build_dir="/${root_dir}/${proj_dir}"
-base_name="${project_name}-$(id -un)"
-cached_volume="${project_name}-cache-$(id -un)"
-container_name=$base_name
-image_name="$base_name:dev"
+# Building constants (that are dynamically created, overwritten if set elsewhere)
+build_dir=${_build_dir:-"/${root_dir}/${proj_dir}"}
+base_name=${_base_name:-"${project_name}-$(id -un)"}
+cached_volume=${_cached_volume:-"${project_name}-cache-$(id -un)"}
+container_name=${_container_name:-$base_name}
+image_name=${_image_name:-"$base_name:dev"}
 
 # Static files
 # shellcheck source=./modules
