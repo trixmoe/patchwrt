@@ -1,6 +1,7 @@
 #!/bin/sh
-# shellcheck source=./scripts/common.sh
-. "$(dirname "$0")/common.sh"
+# shellcheck source=./scripts/openwrt/common.sh
+OPENWRT_SCRIPTS_DIR=$(dirname "$0")/
+. "$OPENWRT_SCRIPTS_DIR/common.sh"
 set -e
 # shellcheck disable=SC3040 # Set pipefail if it works in a subshell, disregard if unsupported
 (set -o pipefail 2> /dev/null) && set -o pipefail
