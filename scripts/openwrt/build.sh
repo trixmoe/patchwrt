@@ -3,6 +3,8 @@
 OPENWRT_SCRIPTS_DIR=$(dirname "$0")/
 . "$OPENWRT_SCRIPTS_DIR/common.sh"
 
+set -e
+
 print_help()
 {
     printf "Usage: build.sh\n"
@@ -60,7 +62,7 @@ if [ -n "$rebuild" ]; then
         board=$(sed -n 's/^CONFIG_TARGET_BOARD="\(.*\)"/\1/p' .config)
     fi
     target=$(sed -n 's/^CONFIG_TARGET_SUBTARGET="\(.*\)"/\1/p' .config)
-    rm "bin/targets/$board/$target"/openwrt-*
+    rm "bin/targets/$board/$target"/openwrt-* || true # files not existing is not an error
 else
     # Create .config from minimal diffconfig
     make defconfig
