@@ -77,6 +77,20 @@ rootdir() {
     printf "%s" "$vps_root_dir"
 }
 
+print_module_dir() {
+    (
+    rootdir >/dev/null
+    # shellcheck disable=SC1090 # may change at runtime
+    . "$MODULES_FILE_ROOTDIR"
+
+    for __module in "$@"; do
+        __module_dir="" # SC2154/SC2034
+        eval __module_dir="\$${__module}_DIRECTORY"
+        [ -n "$__module_dir" ] && printf "%s\n" "$__module_dir"
+    done
+    )
+}
+
 _modules_dir() {
     (
     rootdir >/dev/null
@@ -89,11 +103,7 @@ _modules_dir() {
         __modules=$MODULES
     fi
 
-    for __module in $__modules; do
-        __module_dir="" # SC2154/SC2034
-        eval __module_dir="\$${__module}_DIRECTORY"
-        [ -n "$__module_dir" ] && printf "%s\n" "$__module_dir"
-    done
+    print_module_dir $__modules
     ) | sort -u
 }
 
