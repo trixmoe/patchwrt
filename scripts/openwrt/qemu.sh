@@ -3,6 +3,7 @@
 OPENWRT_SCRIPTS_DIR=$(dirname "$0")/
 . "$OPENWRT_SCRIPTS_DIR/common.sh"
 set -eu
+verify_openwrt_module
 
 vps_root_dir=$(rootdir)
 

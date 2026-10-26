@@ -41,6 +41,8 @@ while :; do
     shift
 done
 
+verify_openwrt_module
+
 vps_root_dir=$(rootdir)
 
 cd "$vps_root_dir/$_OPENWRT_DIR" || { errormsg "could not cd into openwrt directory"; exit 1; }
