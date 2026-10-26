@@ -5,6 +5,8 @@ OPENWRT_SCRIPTS_DIR=${OPENWRT_SCRIPTS_DIR:-$(dirname "$0")}
 BASE_SCRIPTS_DIR=${BASE_SCRIPTS_DIR:-$OPENWRT_SCRIPTS_DIR/..}
 . "$BASE_SCRIPTS_DIR/common.sh"
 
+OPENWRT_MODULE=${OPENWRT_MODULE:-}
+openwrt_dir=""
 if [ -n "$OPENWRT_MODULE" ]; then
     openwrt_dir=$(print_module_dir "$OPENWRT_MODULE")
 fi
