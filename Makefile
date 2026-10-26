@@ -1,10 +1,10 @@
 default: hello
 
 update: ## Update modules (all, or MODULE="A B")
-	@./scripts/update.sh $(MODULE)
+	@./scripts/update.sh $(or $(MODULE),$(OPENWRT_MODULE))
 
 nupdate: ## Update modules, no backup (all, or MODULE="A B")
-	@./scripts/update.sh -n $(MODULE)
+	@./scripts/update.sh -n $(or $(MODULE),$(OPENWRT_MODULE))
 
 dirclean: ## Delete module directories
 	@./scripts/cleandir.sh

@@ -33,12 +33,17 @@ RUN echo '{"workbench.colorTheme": "Solarized Dark"}' > .vscode/settings.json
 
 # builder acts as a from-scratch environment, appropriate for CI or testing
 FROM base AS builder
+# If you have multiple modules (versions) of OpenWrt, you MAY OPTIONALLY select which one you want to work on.
+# This is particularly useful for CI builds, where you may only want 1 version/device/patchset.
+ARG OPENWRT_MODULE=""
+ENV OPENWRT_MODULE=$OPENWRT_MODULE
+
 # Minimal copy to allow for maximum caching
 COPY --chown=$USR modules ./
 COPY --chown=$USR scripts ./scripts
-RUN ./scripts/update.sh
-# Copy everything else that's important and might change more often
 COPY --chown=$USR Makefile ./
+RUN MODULE="$OPENWRT_MODULE" make update
+# Copy everything else that's important and might change more often
 COPY --chown=$USR patches ./patches
 COPY --chown=$USR .git/ ./.git/
 COPY --chown=$USR .gitignore ./
