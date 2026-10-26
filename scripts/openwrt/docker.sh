@@ -45,6 +45,7 @@ build()
     [ ! -d patches ] && mkdir -v patches # Ensure patches directory exist (required)
     docker build \
         --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir" \
+        --build-arg OPENWRT_MODULE="$OPENWRT_MODULE" \
         --target "builder" \
         -t "$image_name" .
 }
@@ -52,10 +53,16 @@ build()
 tools()
 {
     patchset=$1
+
+    toolchain_image_name="$(print_toolchain_image_name "$patchset")"
+    if [ -n "$OPENWRT_MODULE" ]; then
+        toolchain_module_error=" and for OPENWRT_MODULE \"$OPENWRT_MODULE\""
+    fi
+
     docker build \
         --build-arg BUILD_USER="$build_user" --build-arg BUILD_ROOTDIR="$root_dir" --build-arg BUILD_PROJDIR="$proj_dir" \
-        --target "toolchain" --build-arg PATCHSET="$patchset" \
-        -t "$image_name-toolchain-$(printf '%s' "$patchset" | tr '_' '-')" . || { errormsg "could not build toolchain for \"$patchset\".\n"; exit 1; }
+        --target "toolchain" --build-arg PATCHSET="$patchset" --build-arg OPENWRT_MODULE="$OPENWRT_MODULE" \
+        -t "$toolchain_image_name" . || { errormsg "could not build toolchain for \"$patchset\"$toolchain_module_error.\n"; exit 1; }
 }
 
 run()
