@@ -21,3 +21,35 @@ elif [ -z "$openwrt_dir" ]; then
 else
     infomsg "OpenWrt module directory selected: $BOLD$UNDERLINE%s$RT\n" "$_OPENWRT_DIR"
 fi
+
+OPENWRT_MODULE_LOWERCASE="$(printf '%s' "$OPENWRT_MODULE" | tr '[:upper:]' '[:lower:]')"
+
+print_toolchain_image_name() {
+    patchset=$1
+    if [ -z "$patchset" ]; then
+        errormsg "Patchset has to be specified for toolchain image."
+        return 1
+    fi
+    toolchain_image_name="$image_name-toolchain-$(printf '%s' "$patchset" | tr '[:upper:]' '[:lower:]')"
+    if [ -n "$OPENWRT_MODULE" ]; then
+        toolchain_image_name="$toolchain_image_name-$OPENWRT_MODULE_LOWERCASE"
+    fi
+    printf "%s" "$toolchain_image_name"
+}
+
+# Given that conatiner registries are per-project, the "$image_name" adds unnecessary length.
+# As such, we shorten it.
+print_remote_toolchain_image_name() {
+    patchset=$1
+    if [ -z "$patchset" ]; then
+        errormsg "Patchset has to be specified for toolchain image."
+        return 1
+    fi
+    if [ -z "$OPENWRT_MODULE" ]; then
+        errormsg "OpenWrt module has to be specificed for remote toolchain image."
+        return 1
+    fi
+
+    remote_image_name="toolchain-$(printf '%s' "$patchset" | tr '[:upper:]' '[:lower:]')-${OPENWRT_MODULE_LOWERCASE}"
+    printf "%s" "$remote_image_name"
+}
