@@ -103,6 +103,7 @@ _modules_dir() {
         __modules=$MODULES
     fi
 
+    # shellcheck disable=SC2086 # word splitting is intentional.
     print_module_dir $__modules
     ) | sort -u
 }
