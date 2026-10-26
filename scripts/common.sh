@@ -77,6 +77,27 @@ rootdir() {
     printf "%s" "$vps_root_dir"
 }
 
+print_module_commit() {
+    (
+    rootdir >/dev/null
+    # shellcheck disable=SC1090 # may change at runtime
+    . "$MODULES_FILE_ROOTDIR"
+
+    retcode=0
+    for __module in "$@"; do
+        __module_commit="" # SC2154/SC2034
+        eval __module_commit="\$${__module}_COMMIT"
+        if [ -n "$__module_commit" ]; then
+            printf "%s\n" "$__module_commit"
+        else
+            errormsg "Module %s has missing commit\n" "$__module"
+            retcode=1
+        fi
+    done
+    exit "$retcode"
+    )
+}
+
 print_module_dir() {
     (
     rootdir >/dev/null
