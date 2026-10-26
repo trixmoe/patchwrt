@@ -1,6 +1,8 @@
 #!/bin/sh
 # shellcheck source=./scripts/common.sh
-BASE_SCRIPTS_DIR=$(dirname "$0")/..
+
+OPENWRT_SCRIPTS_DIR=${OPENWRT_SCRIPTS_DIR:-$(dirname "$0")}
+BASE_SCRIPTS_DIR=${BASE_SCRIPTS_DIR:-$OPENWRT_SCRIPTS_DIR/..}
 . "$BASE_SCRIPTS_DIR/common.sh"
 
 if [ -n "$OPENWRT_MODULE" ]; then
