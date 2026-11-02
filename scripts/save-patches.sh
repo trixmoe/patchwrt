@@ -13,6 +13,7 @@ print_help()
     printf "This script takes commits on modules and saves them as patch files.\n\n"
 
     printf "  --one    Only save a single tag (generic)\n"
+    printf "  -d dir   Only save the patches of the given module directory\n"
     printf "  --help   Show this help menu\n"
 }
 
@@ -20,6 +21,11 @@ while :; do
     case $1 in
         --one)
             one_tag=1
+            ;;
+        -d)
+            [ -n "$2" ] || { errormsg "no module directory provided\n"; print_help; exit 1; }
+            only_module=$2
+            shift
             ;;
         -\?|-help|--help)
             print_help
@@ -81,12 +87,17 @@ is_commit_child_of_ancestor()
 }
 
 for module in $ALL_MODULES; do
+    module_dir="" # SC2154/SC2034
+    eval module_dir="\$${module}_DIRECTORY"
+
+    # Skip module if only_module is set and does not match
+    [ -n "$only_module" ] && [ "$module_dir" != "$only_module" ] && continue
+    found=1
+
     infomsg "Saving patches for module: %s\n" "$module"
 
     # cd into module directory
     cd "$vps_root_dir" || { errormsg "cannot enter versioned patch system root directory\n"; exit 1; }
-    module_dir="" # SC2154/SC2034
-    eval module_dir="\$${module}_DIRECTORY"
     cd "$module_dir" || { warnmsg "cannot enter module directory \"%s\"\n" "$module_dir"; continue; }
 
     stash_uncomitted_changes
@@ -137,3 +148,5 @@ for module in $ALL_MODULES; do
 
     infomsg "Saved %i patch sets for \"%s\"\n" "$saved_patchsets_count" "$module_dir"
 done
+
+[ -z "$only_module" ] || [ -n "$found" ] || { errormsg "no module matches directory \"%s\"\n" "$only_module"; exit 1; }

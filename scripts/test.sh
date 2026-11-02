@@ -324,6 +324,57 @@ specific_commits() (
 
 runtest specific_commits
 
+# 'save-patches.sh -d' must only save the patches of the requested module
+save_single_module() (
+    set -e
+
+    # Create a tagged commit in a second module
+    cd github-sheet
+    git config user.name "test"
+    git config user.email "test@example.org"
+    echo "sheet" > sheet-file
+    git add sheet-file
+    git commit -m "sheet change"
+    git tag generic
+    cd ../
+
+    # Saving github-ignore must not save github-sheet
+    ./scripts/save-patches.sh -d github-ignore
+    [ ! -e patches/github-sheet ] || { errormsg "Saving \"github-ignore\" also saved \"github-sheet\".\n"; exit 1; }
+    files=$(find patches/github-ignore/specific/ -maxdepth 1 -type f -name "*.patch" | wc -l)
+    [ "$files" -eq 2 ] || { errormsg "Saving \"github-ignore\" did not save its 2 patches (%s).\n" "$files"; exit 1; }
+
+    # Saving github-sheet must only save github-sheet
+    ./scripts/save-patches.sh -d github-sheet
+    ls patches/github-sheet/generic/0001-sheet-change.patch
+    files=$(find patches/github-sheet/generic/ -maxdepth 1 -type f -name "*.patch" | wc -l)
+    [ "$files" -eq 1 ] || { errormsg "Saving \"github-sheet\" did not save its single patch (%s).\n" "$files"; exit 1; }
+
+    # Reset github-sheet, keep its patches for the 'apply -d' test
+    cd github-sheet
+    git reset -q --hard "$CHEATSHEET_COMMIT"
+    git tag -d generic >/dev/null
+)
+
+runtest save_single_module
+
+# 'save-patches.sh -d' must fail for an unknown module directory or a missing value
+save_single_module_errors() (
+    set -e
+
+    if ./scripts/save-patches.sh -d not-a-module >/dev/null 2>&1; then
+        errormsg "Saving patches for an unknown module directory succeeded.\n"
+        exit 1
+    fi
+
+    if ./scripts/save-patches.sh -d >/dev/null 2>&1; then
+        errormsg "'save-patches.sh -d' succeeded without a module directory.\n"
+        exit 1
+    fi
+)
+
+runtest save_single_module_errors
+
 # Save the top-most commit in specific
 SPECIFIC_COMMIT_HASH=$(get_ghignore_commit_hash)
 
@@ -341,6 +392,46 @@ reset_workingdir() (
 )
 
 runtest reset_workingdir
+
+# 'apply-patches.sh -d' must only apply the patches of the requested module
+apply_single_module() (
+    set -e
+
+    # github-sheet has a generic patch (saved above), but must not be patched
+    ./scripts/apply-patches.sh -d github-ignore generic
+
+    cd github-ignore
+    current_hash=$(git rev-parse HEAD)
+    [ "$current_hash" = "$GENERIC_COMMIT_HASH" ] || { errormsg "\"apply-patches.sh -d\" did not apply the requested module's patch: \"%s\" instead of \"%s\"\n" "$current_hash" "$GENERIC_COMMIT_HASH"; exit 1; }
+    cd ../
+
+    cd github-sheet
+    current_hash=$(git rev-parse HEAD)
+    [ "$current_hash" = "$CHEATSHEET_COMMIT" ] || { errormsg "\"apply-patches.sh -d\" applied patches to a module that was not selected.\n"; exit 1; }
+    cd ../
+
+    # Remove github-sheet's patches, they are not needed by the remaining tests
+    rm -r patches/github-sheet
+)
+
+runtest apply_single_module
+
+# 'apply-patches.sh -d' must fail for an unknown module directory or a missing value
+apply_single_module_errors() (
+    set -e
+
+    if ./scripts/apply-patches.sh -d not-a-module generic >/dev/null 2>&1; then
+        errormsg "Applying patches for an unknown module directory succeeded.\n"
+        exit 1
+    fi
+
+    if ./scripts/apply-patches.sh -d >/dev/null 2>&1; then
+        errormsg "'apply-patches.sh -d' succeeded without a module directory.\n"
+        exit 1
+    fi
+)
+
+runtest apply_single_module_errors
 
 # Test backup branch created with 'make update'
 test_backup_branch() (

@@ -7,6 +7,7 @@ print_help()
     printf "Usage: apply-patches.sh [patch set]\n"
     printf "This script applies the patch files in a way that allows for future saving.\n\n"
 
+    printf "  -d dir   Only apply the patches of the given module directory\n"
     warnmsg "This is not a utility to be used directly.\n"
     warnindent "Make use of this utility through the existing Make targets\n"
     warnindent "generic should always be applied first, followed by 1 specific target.\n"
@@ -14,6 +15,11 @@ print_help()
 
 while :; do
     case $1 in
+        -d)
+            [ -n "$2" ] || { errormsg "no module directory provided\n"; print_help; exit 1; }
+            only_module=$2
+            shift
+            ;;
         -\?|-help|--help)
             print_help
             exit 0
@@ -42,6 +48,10 @@ for module_with_patches_path in "$vps_root_dir"/patches/*; do
     module_dir=$(basename "$module_with_patches_path")
     patches_dir="$module_with_patches_path"/"$patch_set"
 
+    # Skip module if only_module is set and does not match
+    [ -n "$only_module" ] && [ "$module_dir" != "$only_module" ] && continue
+    found=1
+
     [ -d "$vps_root_dir/$module_dir" ] || { warnmsg "module \"%s\" is not cloned. Skipping.\n" "$module_dir"; continue; }
     [ -d "$vps_root_dir/$module_dir/.git" ] || { warnmsg "module \"%s\"'s clone is not a Git repository. Skipping.\n" "$module_dir"; continue; }
     [ -d "$patches_dir" ] || { warnmsg "patches \"%s\" do not exist for module \"%s\". Skipping\n" "$patch_set" "$module_dir"; continue; }
@@ -59,3 +69,5 @@ for module_with_patches_path in "$vps_root_dir"/patches/*; do
         git tag -f "$patch_set"
     fi
 done
+
+[ -z "$only_module" ] || [ -n "$found" ] || { errormsg "no patch sets present for module directory \"%s\"\n" "$only_module"; exit 1; }
